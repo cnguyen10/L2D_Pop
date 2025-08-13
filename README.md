@@ -1,0 +1,2 @@
+Implementation of the paper:
+> Tailor, Dharmesh, Aditya Patra, Rajeev Verma, Putra Manggala, and Eric Nalisnick. "Learning to defer to a population: A meta-learning approach." In *International Conference on Artificial Intelligence and Statistics*, pp. 3475-3483. PMLR, 2024.

@@ -1,0 +1,61 @@
+dataset:
+  name: cifar100
+  num_classes: 100
+  root: /sda2/datasets/cifar100/ciFAIR-100
+  train_files:
+    - ${dataset.root}/part_dependence/train_0_0.3.json
+    # - ${dataset.root}/part_dependence/train_1_0.3.json
+    # - ${dataset.root}/part_dependence/train_2_0.3.json
+    # - ${dataset.root}/part_dependence/train_3_0.3.json
+    # - ${dataset.root}/part_dependence/train_4_0.3.json
+    # - ${dataset.root}/part_dependence/train_0_0.5.json
+    - ${dataset.root}/part_dependence/train_1_0.5.json
+    # - ${dataset.root}/part_dependence/train_2_0.5.json
+    # - ${dataset.root}/part_dependence/train_3_0.5.json
+    # - ${dataset.root}/part_dependence/train_4_0.5.json
+    # - ${dataset.root}/part_dependence/train_0_0.7.json
+    # - ${dataset.root}/part_dependence/train_1_0.7.json
+    - ${dataset.root}/part_dependence/train_2_0.7.json
+    # - ${dataset.root}/part_dependence/train_3_0.7.json
+    # - ${dataset.root}/part_dependence/train_4_0.7.json
+  train_ground_truth_file: ${dataset.root}/train.json
+  test_files:
+    - ${dataset.root}/part_dependence/test_0_0.3.json
+    # - ${dataset.root}/part_dependence/test_1_0.3.json
+    # - ${dataset.root}/part_dependence/test_2_0.3.json
+    # - ${dataset.root}/part_dependence/test_3_0.3.json
+    # - ${dataset.root}/part_dependence/test_4_0.3.json
+    # - ${dataset.root}/part_dependence/test_0_0.5.json
+    - ${dataset.root}/part_dependence/test_1_0.5.json
+    # - ${dataset.root}/part_dependence/test_2_0.5.json
+    # - ${dataset.root}/part_dependence/test_3_0.5.json
+    # - ${dataset.root}/part_dependence/test_4_0.5.json
+    # - ${dataset.root}/part_dependence/test_0_0.7.json
+    # - ${dataset.root}/part_dependence/test_1_0.7.json
+    - ${dataset.root}/part_dependence/test_2_0.7.json
+    # - ${dataset.root}/part_dependence/test_3_0.7.json
+    # - ${dataset.root}/part_dependence/test_4_0.7.json
+  test_ground_truth_file: ${dataset.root}/test.json
+
+model:
+  _partial_: True
+  _target_: models.ResNet.PreActResNet18
+  in_channels: 3  # color images: 3, black and white: 1
+  conv1_kernel_size: [3, 3]
+
+data_augmentation:
+  resize: null
+  padding_px: 4
+  crop_size: [32, 32]
+  prob_random_flip: 0.5
+  mean: null
+  std: null
+
+training:
+  lr: 0.01
+  batch_size: 128
+  num_epochs: 300
+  clipped_norm: 10
+
+hparams:
+  dirichlet_concentration: [0.5, 0.5]  # (human, classifier)

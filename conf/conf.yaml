@@ -1,0 +1,34 @@
+defaults:
+  - cifar100
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: disabled
+  - _self_
+  
+hydra:  
+  output_subdir: null  
+  run:  
+    dir: .
+
+experiment:
+  name: L2D_Pop
+  tracking_uri: sqlite:///l2d_pop.db
+  logdir: ./logdir
+  run_id: null
+
+data_loading:
+  num_workers: 8
+  num_threads: 4
+  prefetch_size: 2
+  progress_bar: True
+
+training:
+  momentum: 0.9
+  weight_decay: 0.0005
+  eval_every_n_epochs: 1
+  dropout_rate: 0.1
+
+jax:
+  platform: cuda
+  mem: 0.25  # percentage of VRAM in GPU will be allocated
+  disable_jit: False
+  dtype: jnp.bfloat16
