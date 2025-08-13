@@ -710,6 +710,39 @@ def main(cfg: DictConfig) -> None:
                     synchronous=False
                 )
 
+                # region AVERAGE HUMAN
+                model.eval()
+                avg_representations = jnp.mean(
+                    a=human_representations,
+                    axis=0,
+                    keepdims=True
+                )
+
+                accuracies, coverages, _ = evaluate(
+                    dataloader=dataloader_test,
+                    human_representations=avg_representations,
+                    model=model,
+                    cfg=cfg
+                )
+
+                mlflow.log_metrics(
+                    metrics={
+                        f'human_{i}/no_ctx_accuracy': accuracies[i].item() \
+                            for i in range(len(accuracies))
+                    },
+                    step=epoch_id + 1,
+                    synchronous=False
+                )
+                mlflow.log_metrics(
+                    metrics={
+                        f'human_{i}/no_ctx_coverage': coverages[i].item() \
+                            for i in range(len(coverages))
+                    },
+                    step=epoch_id + 1,
+                    synchronous=False
+                )
+                # endergion
+
             # wait for checkpoint manager completing the asynchronous saving
             # before saving another checkpoint
             ckpt_mngr.wait_until_finished()
