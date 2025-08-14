@@ -69,7 +69,7 @@ class L2DPopModel(nnx.Module):
     def __call__(
         self,
         x: jax.Array,
-        human_representation: jax.Array  # (num_humans, feature_dim + embedding_dim)
+        human_representation: jax.Array
     ) -> jax.Array:
         """perform a learning to defer following the Multi-L2D approach
 
@@ -112,7 +112,11 @@ class L2DPopModel(nnx.Module):
             arrays=(
                 jnp.broadcast_to(
                     array=logits_clf[:, None, :],
-                    shape=(len(logits_clf), logits_human.shape[1], logits_clf.shape[-1])
+                    shape=(
+                        len(logits_clf),
+                        logits_human.shape[1],
+                        logits_clf.shape[-1]
+                    )
                 ),
                 logits_human
             ),
@@ -235,7 +239,7 @@ def loss_fn(
     # endregion
 
     # region PRIOR
-    # apply log-softmax on the logits 
+    # apply log-softmax on the logits
     log_softmax = jax.nn.log_softmax(
         x=logits,
         axis=-1
@@ -372,8 +376,10 @@ def evaluate(
 ) -> tuple[list[jax.Array], list[jax.Array], jax.Array]:
     """
     """
-    accuracy_accums = [nnx.metrics.Accuracy() for _ in range(len(human_representations))]
-    coverages = [nnx.metrics.Average() for _ in range(len(human_representations))]
+    accuracy_accums = [nnx.metrics.Accuracy()
+                       for _ in range(len(human_representations))]
+    coverages = [nnx.metrics.Average()
+                 for _ in range(len(human_representations))]
     clf_accuracy_accum = nnx.metrics.Accuracy()
 
     model.eval()
@@ -433,8 +439,8 @@ def evaluate(
         logits_max_id = jnp.argmax(a=logits, axis=-1)  # (batch, num_experts)
         logits_max_id = logits_max_id - cfg.dataset.num_classes
 
-        # which samples are predicted by classifier
-        samples_predicted_by_clf = (logits_max_id < 0) * 1  # (batch, num_experts)
+        # which samples are predicted by classifier # (batch, num_experts)
+        samples_predicted_by_clf = (logits_max_id < 0) * 1
 
         for i in range(len(coverages)):
             coverages[i].update(values=samples_predicted_by_clf[:, i])
@@ -586,7 +592,7 @@ def main(cfg: DictConfig) -> None:
     # create iterative datasets as data loaders
         dataloader_train = initialize_dataloader(
             data_source=source_train,
-            num_epochs=cfg.training.num_epochs - start_epoch_id + 1,
+            num_epochs=5*(cfg.training.num_epochs - start_epoch_id + 1),
             shuffle=True,
             seed=random.randint(a=0, b=255),
             batch_size=2 * cfg.training.batch_size,
@@ -695,16 +701,16 @@ def main(cfg: DictConfig) -> None:
                 )
                 mlflow.log_metrics(
                     metrics={
-                        f'human_{i}/accuracy': accuracies[i].item() \
-                            for i in range(len(accuracies))
+                        f'human_{str(i).zfill(2)}/accuracy': accuracies[i].item()
+                        for i in range(len(accuracies))
                     },
                     step=epoch_id + 1,
                     synchronous=False
                 )
                 mlflow.log_metrics(
                     metrics={
-                        f'human_{i}/coverage': coverages[i].item() \
-                            for i in range(len(coverages))
+                        f'human_{str(i).zfill(2)}/coverage': coverages[i].item()
+                        for i in range(len(coverages))
                     },
                     step=epoch_id + 1,
                     synchronous=False
@@ -714,8 +720,14 @@ def main(cfg: DictConfig) -> None:
                 model.eval()
                 avg_representations = jnp.mean(
                     a=human_representations,
-                    axis=0,
-                    keepdims=True
+                    axis=0
+                )  # (feature_dim + embedding_dim,)
+                avg_representations = jnp.broadcast_to(
+                    array=avg_representations[None, :],
+                    shape=(
+                        len(human_representations),
+                        *avg_representations.shape
+                    )
                 )
 
                 accuracies, coverages, _ = evaluate(
@@ -727,16 +739,16 @@ def main(cfg: DictConfig) -> None:
 
                 mlflow.log_metrics(
                     metrics={
-                        f'human_{i}/no_ctx_accuracy': accuracies[i].item() \
-                            for i in range(len(accuracies))
+                        f'human_{str(i).zfill(2)}/no_ctx_accuracy': accuracies[i].item()
+                        for i in range(len(accuracies))
                     },
                     step=epoch_id + 1,
                     synchronous=False
                 )
                 mlflow.log_metrics(
                     metrics={
-                        f'human_{i}/no_ctx_coverage': coverages[i].item() \
-                            for i in range(len(coverages))
+                        f'human_{str(i).zfill(2)}/no_ctx_coverage': coverages[i].item()
+                        for i in range(len(coverages))
                     },
                     step=epoch_id + 1,
                     synchronous=False
