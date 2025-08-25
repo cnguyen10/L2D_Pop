@@ -1,5 +1,6 @@
 import json
 import os
+import random
 from typing import SupportsIndex
 from tqdm import tqdm
 
@@ -102,7 +103,9 @@ class ImageDataSource(grain.RandomAccessDataSource):
         self,
         annotation_files: list[str],
         ground_truth_file: str,
-        root: str | None = None
+        root: str | None = None,
+        num_samples: int | None = None,
+        seed: int | None = None
     ) -> None:
         """make the dataset from multiple annotation files.
 
@@ -113,16 +116,26 @@ class ImageDataSource(grain.RandomAccessDataSource):
             annotation_files: list of pathes to the json files of annotators
             ground_truth_file: path to the json file of ground truth
             root: the directory to the dataset folder
-            shape: the new shape (width and height) of the resized image
+            num_samples: the number of samples to use. If None, the whole
+                set of data will be loaded. Otherwise, only `num_samples`
+                will be sampled.
+            seed: the random seed to sample when `num_samples` is not None
 
         Returns:
-            dataset:
+            datasource:
         """
         self.root = root if root is not None else ''
         self._data = combine_data(
             annotation_files=annotation_files,
             ground_truth_file=ground_truth_file
         )
+
+        if isinstance(num_samples, int) and seed is not None:
+            # set random seed
+            random.seed(a=seed)
+
+            # sampling a subset from the whole data
+            self._data = random.sample(population=self._data, k=num_samples)
 
     def __getitem__(self, idx: SupportsIndex) -> dict[str, np.ndarray]:
         """
